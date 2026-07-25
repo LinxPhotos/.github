@@ -1,0 +1,84 @@
+name: Deploy photo-service to Netlify
+
+# CLI-only deploys from GitHub Actions — no Netlify GitHub integration required.
+# One Netlify site: dev alias on main/master, production on version tags.
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - "photo-service/**"
+      - ".github/workflows/photo-service-netlify.yml"
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Netlify deploy target
+        required: true
+        default: dev
+        type: choice
+        options:
+          - dev
+          - prod
+
+defaults:
+  run:
+    working-directory: photo-service
+
+concurrency:
+  group: photo-service-netlify-${{ github.ref_type == 'tag' && 'prod' || 'dev' }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve deploy target
+        id: target
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            echo "target=prod" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "target=${{ inputs.target }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "target=dev" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: photo-service/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build site
+        run: pnpm build
+
+      # Stable dev URL: https://dev--<site-name>.netlify.app
+      - name: Deploy to Netlify (dev alias)
+        if: steps.target.outputs.target == 'dev'
+        run: npx netlify-cli deploy --dir=dist --alias=dev --message "dev ${{ github.sha }}"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+      - name: Deploy to Netlify (production)
+        if: steps.target.outputs.target == 'prod'
+        run: npx netlify-cli deploy --dir=dist --prod --message "prod ${{ github.ref_name }} (${{ github.sha }})"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}

@@ -1,0 +1,28 @@
+name: capture-one-linx-sync
+on:
+  push:
+    paths:
+      - "capture-one-linx-sync/**"
+  pull_request:
+    paths:
+      - "capture-one-linx-sync/**"
+
+defaults:
+  run:
+    working-directory: capture-one-linx-sync
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: capture-one-linx-sync/pnpm-lock.yaml
+      - run: pnpm install
+      - run: pnpm typecheck
