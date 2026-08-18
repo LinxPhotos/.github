@@ -8,4 +8,4 @@
 !workflows/
 !workflows/**
 !.gitmodules
-!agent-rules
+!AGENT-RULES.md
