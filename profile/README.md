@@ -6,6 +6,6 @@
 
 Photo portfolio hosting and tools for photographers.
 
-[linx.photos](https://linx.photos/) | [InstaLay](https://linxphotos.github.io/InstaLay/) | [docs](https://docs.linx.photos/)
+[linx.photos](https://linx.photos/) | [InstaLay](https://instalay.linx.photos/) | [docs](https://docs.linx.photos/)
 
 </div>
