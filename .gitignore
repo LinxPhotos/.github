@@ -14,3 +14,4 @@
 !/.github/workflows/encoding-guard.yml
 !/.editorconfig
 !/.gitattributes
+!CHANGELOG.adoc
